@@ -1,0 +1,22 @@
+service: fru-notifier
+frameworkVersion: ">=1.1.0"
+useDotenv: true
+
+provider:
+  name: aws
+  region: eu-west-2
+  runtime: nodejs14.x
+
+  environment:
+    SENDGRID_API_KEY: ${env:SENDGRID_API_KEY}
+    USERNAME: ${env:USERNAME}
+    PASSWORD: ${env:PASSWORD}
+    TARGET_EMAIL: ${env:TARGET_EMAIL}
+
+functions:
+  run:
+    handler: handler.run
+    memorySize: 128
+    timeout: 30
+    events:
+      - schedule: rate(10 minutes)
