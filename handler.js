@@ -77,7 +77,7 @@ const fetchLoginCookie = async (cookie) => {
   return cookies;
 };
 
-const makeCaseRequest = async (cookie, subject) => {
+const makeCaseRequest = async (cookie, subject, grading) => {
   const res = await fetch("https://fruonline.org.uk/Case/Filter", {
     headers: {
       accept:
@@ -96,14 +96,14 @@ const makeCaseRequest = async (cookie, subject) => {
       "Referrer-Policy": "strict-origin-when-cross-origin",
     },
     // body: `SelectedGrading=Any+Rep&SelectedSubject=${subject}`,
-    body: `SelectedGrading=Any+Rep&SelectedSubject=${subject}`,
+    body: `SelectedGrading=${grading}&SelectedSubject=${subject}`,
     method: "POST",
   });
   return res;
 };
 
-const isCaseAvailable = async (cookie, subject) => {
-  const res = await makeCaseRequest(cookie, subject);
+const isCaseAvailable = async (cookie, subject, grading) => {
+  const res = await makeCaseRequest(cookie, subject, grading);
 
   const body = await res.text();
   const root = parser.parse(body);
@@ -138,11 +138,24 @@ module.exports.run = async () => {
   const loginCookie = await fetchLoginCookie(sessionCookie);
   const jointCookie = [sessionCookie, loginCookie].join("; ");
 
-  const employmentTable = await isCaseAvailable(jointCookie, "Employment");
-  const ssTable = await isCaseAvailable(jointCookie, "Social+Security");
+  const employmentTable = await isCaseAvailable(
+    jointCookie,
+    "Employment",
+    "Any+Rep"
+  );
+  const ssTable = await isCaseAvailable(
+    jointCookie,
+    "Social+Security",
+    "Any+Rep"
+  );
+  const ssTable2 = await isCaseAvailable(
+    jointCookie,
+    "Social+Security",
+    "Not+First+or+Second+Case"
+  );
 
   if (employmentTable || ssTable) {
-    const html = [employmentTable, ssTable]
+    const html = [employmentTable, ssTable, ssTable2]
       .filter((table) => !!table)
       .join("\n<br />\n<br />\n");
     const a = await sendEmail(html);
